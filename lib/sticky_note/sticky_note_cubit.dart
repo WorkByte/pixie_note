@@ -28,30 +28,30 @@ class StickyNoteCubit extends Cubit<StickyNoteState> {
       {bool? exitNow,
       required String noteText,
       required String key,
-      bool? toggleObscureText}) async {
-    bool obscureText =
-        ((getCurrentNote().noteItems ?? {})[key]?.obscureText ?? false);
+      bool? toggleObscureText,
+      bool? toggleEnableCopy}) async {
+    NoteItem? noteItem = (getCurrentNote().noteItems ??= {})[key];
 
-    (getCurrentNote().noteItems ?? {})[key] = NoteItem(
-        note: noteText ?? '',
-        id: key,
-        obscureText: (null != toggleObscureText && toggleObscureText)
-            ? !obscureText
-            : obscureText);
+    print('NoteItem:0 ' + jsonEncode(noteItem?.toJson()));
+    noteItem ??= NoteItem(id: key);
+
+    noteItem.note = noteText ?? '';
+    if (toggleObscureText != null) {
+      noteItem.obscureText = !(noteItem.obscureText ??= false);
+      print('NoteItem:1 ' + jsonEncode(noteItem?.toJson()));
+    }
+    if (toggleEnableCopy != null) {
+      noteItem.enableCopy = !(noteItem.enableCopy ??= false);
+      print('NoteItem:2 ' + jsonEncode(noteItem?.toJson()));
+    }
+
+    (getCurrentNote().noteItems ?? {})[key] = noteItem;
 
     await writeNote(getCurrentNote());
-    setCurrentNoteItem(exitNow);
+    updateNoteList(exitNow);
   }
 
-  addNoteItem() {
-    int newKey = DateTime.now().millisecondsSinceEpoch;
-    (getCurrentNote().noteItems ?? {})[newKey.toString()] =
-        NoteItem(note: '', id: newKey.toString());
-    getStateRepo().stateConfig = EditorStateConfig.EDIT_NOTE;
-    setCurrentNoteItem(false);
-  }
-
-  setCurrentNoteItem(bool? exitNow) {
+  updateNoteList(bool? exitNow) {
     getStateRepo().notesList ??= LinkedHashMap();
     getStateRepo().notesList![getCurrentNote().id!] = getCurrentNote();
 
@@ -69,7 +69,7 @@ class StickyNoteCubit extends Cubit<StickyNoteState> {
       (getCurrentNote().noteItems ?? {}).remove(key);
       await writeNote(getCurrentNote());
     }
-    setCurrentNoteItem(false);
+    updateNoteList(false);
   }
 
   saveNoteTitle({required String title, required String key}) async {
@@ -321,7 +321,7 @@ class StickyNoteCubit extends Cubit<StickyNoteState> {
         tags.split(',').map((e) => e.trim().toLowerCase()).toList();
     await writeNote(getCurrentNote());
     getStateRepo().tags!.addAll((await readPreviousNotes())['tags']);
-    setCurrentNoteItem(false);
+    updateNoteList(false);
   }
 
   void filterNotesByTags(String selected) {

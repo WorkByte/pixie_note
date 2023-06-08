@@ -204,13 +204,17 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
       List<Widget> noteWidgets = [];
       Column noteColumn = Column();
       noteWidgets.add(noteTitleWidget(note, state));
-      noteWidgets.add(const Padding(padding: EdgeInsets.all(12)));
-      noteWidgets.addAll(noteItemsWidget(note, state, cubit));
-      noteWidgets.add(noteTagsWidget(note, state, cubit));
       noteWidgets.add(const Divider(
+        indent: 0,
+        endIndent: 0,
         thickness: 1,
       ));
-      noteWidgets.add(noteOpsOptions(key));
+      // noteWidgets.add(const Padding(padding: EdgeInsets.all(12)));
+      noteWidgets.addAll(noteItemsWidget(note, state, cubit));
+    /*  noteWidgets.add(const Divider(
+        thickness: 1,
+      ));*/
+      noteWidgets.add(noteTagsWidget(note, state, cubit));
 
       noteColumn = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,87 +280,6 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
     });
 
     return noteItemWidgets;
-  }
-
-  Widget itemEditor(
-      SimpleStickyNoteState state, StickyNoteCubit stickyNoteCubit,
-      {BoxConstraints? constraints}) {
-    NoteItem noteItem = state.notesRepository!.currentNoteItem!;
-
-    TextEditingController controller =
-        TextEditingController(text: noteItem.note ?? '');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Note',
-          style: TextStyle(
-              fontSize: 18, color: Colors.black54, fontWeight: FontWeight.w500),
-        ),
-        const Padding(padding: EdgeInsets.all(8)),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.multiline,
-            maxLines: null,
-            decoration: const InputDecoration.collapsed(
-                hintText: 'Enter your note here'),
-            onEditingComplete: () async {
-              print(
-                  'Editing complete..Saving text: \nSaving ${controller.text}');
-              await stickyNoteCubit.saveNoteItem(
-                  noteText: controller.text, key: noteItem.id!, exitNow: false);
-            },
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Wrap(
-              children: [
-                IconButton(
-                    onPressed: () async {
-                      await stickyNoteCubit.saveNoteItem(
-                          noteText: controller.text,
-                          key: noteItem.id!,
-                          exitNow: false);
-                    },
-                    icon: const Icon(
-                      Icons.done,
-                      size: 20,
-                      color: Colors.blue,
-                    )),
-                IconButton(
-                    onPressed: () async {
-                      await stickyNoteCubit.saveNoteItem(
-                          noteText: controller.text,
-                          key: noteItem.id!,
-                          exitNow: false,
-                          toggleObscureText: true);
-                    },
-                    icon: const Icon(
-                      Icons.key,
-                      size: 20,
-                      color: Colors.blue,
-                    )),
-                IconButton(
-                    onPressed: () async {
-                      await stickyNoteCubit.deleteNoteItem(
-                          noteText: controller.text,
-                          key: noteItem.id!,
-                          exitNow: false);
-                    },
-                    icon: const Icon(
-                      Icons.close,
-                      size: 20,
-                      color: Colors.blue,
-                    )),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
   }
 
   Widget noteItemsPreviewWidget(
@@ -640,21 +563,23 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
                     ? null
                     : 2),
           ),
-          IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(
-                  text: noteItem.note,
-                )).then((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Copied to clipboard')));
-                });
-              },
-              icon: const Icon(
-                Icons.content_copy,
-                size: 20,
-              ))
+          (noteItem.enableCopy ?? false)
+              ? IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(
+                      text: noteItem.note,
+                    )).then((_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Copied to clipboard')));
+                    });
+                  },
+                  icon: const Icon(
+                    Icons.content_copy,
+                    size: 20,
+                  ))
+              : SizedBox.shrink()
         ],
       );
     }
@@ -685,37 +610,54 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Wrap(
-            children: [
-              IconButton(
-                  onPressed: () async {
-                    await stickyNoteCubit.saveNoteItem(
-                        noteText: noteItem.note ?? '',
-                        key: noteItem.id!,
-                        exitNow: false,
-                        toggleObscureText: true);
-                  },
-                  icon: Icon(
-                    Icons.key,
-                    size: 20,
-                    color: (noteItem.obscureText ?? false)
-                        ? Colors.blue
-                        : Colors.black26,
-                  )),
-              IconButton(
-                  onPressed: () async {
-                    await stickyNoteCubit.deleteNoteItem(
-                        noteText: noteItem.note ?? '',
-                        key: noteItem.id!,
-                        exitNow: false);
-                  },
-                  icon: const Icon(
-                    Icons.close,
-                    size: 20,
-                    color: Colors.blue,
-                  )),
-            ],
+          Expanded(
+            child: Row(
+              children: [
+                IconButton(
+                    onPressed: () async {
+                      await stickyNoteCubit.saveNoteItem(
+                          noteText: noteItem.note ?? '',
+                          key: noteItem.id!,
+                          exitNow: false,
+                          toggleEnableCopy: true);
+                    },
+                    icon: Icon(
+                      Icons.copy_rounded,
+                      size: 20,
+                      color: (noteItem.enableCopy ?? false)
+                          ? Colors.blue
+                          : Colors.black26,
+                    )),
+                IconButton(
+                    onPressed: () async {
+                      await stickyNoteCubit.saveNoteItem(
+                          noteText: noteItem.note ?? '',
+                          key: noteItem.id!,
+                          exitNow: false,
+                          toggleObscureText: true);
+                    },
+                    icon: Icon(
+                      Icons.key,
+                      size: 20,
+                      color: (noteItem.obscureText ?? false)
+                          ? Colors.blue
+                          : Colors.black26,
+                    )),
+              ],
+            ),
           ),
+          IconButton(
+              onPressed: () async {
+                await stickyNoteCubit.deleteNoteItem(
+                    noteText: noteItem.note ?? '',
+                    key: noteItem.id!,
+                    exitNow: false);
+              },
+              icon: const Icon(
+                Icons.delete,
+                size: 18,
+                color: Colors.redAccent,
+              )),
         ],
       ),
     );
@@ -751,28 +693,12 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
                   style: const TextStyle(
                       fontWeight: FontWeight.w500, fontSize: 18),
                 ),
-        )
-      ],
-    );
-  }
-
-  Widget noteOpsOptions(String key) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        IconButton(
-          onPressed: () {
-            _stickyNoteCubit.addNoteItem();
-          },
-          icon: const Icon(
-            Icons.add,
-            size: 20,
-            color: Colors.blue,
-          ),
         ),
         IconButton(
+          constraints: BoxConstraints(),
+          padding: EdgeInsets.all(4),
           onPressed: () async {
-            await _stickyNoteCubit.startNoteDeletion(key);
+            await _stickyNoteCubit.startNoteDeletion(note.id!);
           },
           icon: const Icon(
             Icons.delete,
@@ -807,10 +733,7 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
           getTagsWidget(note.tags ?? [], (selected) {}, inNoteWidget: true);
     }
 
-    return Padding(
-      padding: EdgeInsets.only(top: 16, bottom: 8),
-      child: widget,
-    );
+    return widget;
   }
 
   Widget getTagsWidget(List<String> tags, Function(String)? onClick,

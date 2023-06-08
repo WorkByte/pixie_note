@@ -49,8 +49,9 @@ class NoteItem {
   String? note;
   String? type;
   bool? obscureText;
+  bool? enableCopy;
 
-  NoteItem({this.id, this.note, this.type, this.obscureText});
+  NoteItem({this.id, this.note, this.type, this.obscureText, this.enableCopy});
 
   factory NoteItem.fromJson(Map<String, dynamic> json) =>
       _$NoteItemFromJson(json);

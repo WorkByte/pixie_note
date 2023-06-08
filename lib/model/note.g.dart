@@ -35,6 +35,7 @@ NoteItem _$NoteItemFromJson(Map<String, dynamic> json) => NoteItem(
       note: json['note'] as String?,
       type: json['type'] as String?,
       obscureText: json['obscureText'] as bool?,
+      enableCopy: json['enableCopy'] as bool?,
     );
 
 Map<String, dynamic> _$NoteItemToJson(NoteItem instance) => <String, dynamic>{
@@ -42,4 +43,5 @@ Map<String, dynamic> _$NoteItemToJson(NoteItem instance) => <String, dynamic>{
       'note': instance.note,
       'type': instance.type,
       'obscureText': instance.obscureText,
+      'enableCopy': instance.enableCopy,
     };
