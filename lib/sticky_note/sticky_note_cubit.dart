@@ -32,23 +32,28 @@ class StickyNoteCubit extends Cubit<StickyNoteState> {
       bool? toggleEnableCopy}) async {
     NoteItem? noteItem = (getCurrentNote().noteItems ??= {})[key];
 
-    print('NoteItem:0 ' + jsonEncode(noteItem?.toJson()));
     noteItem ??= NoteItem(id: key);
 
     noteItem.note = noteText ?? '';
     if (toggleObscureText != null) {
       noteItem.obscureText = !(noteItem.obscureText ??= false);
-      print('NoteItem:1 ' + jsonEncode(noteItem?.toJson()));
     }
     if (toggleEnableCopy != null) {
       noteItem.enableCopy = !(noteItem.enableCopy ??= false);
-      print('NoteItem:2 ' + jsonEncode(noteItem?.toJson()));
     }
 
     (getCurrentNote().noteItems ?? {})[key] = noteItem;
 
     await writeNote(getCurrentNote());
     updateNoteList(exitNow);
+  }
+
+  addNoteItem() {
+    int newKey = DateTime.now().millisecondsSinceEpoch;
+    (getCurrentNote().noteItems ?? {})[newKey.toString()] =
+        NoteItem(note: '', id: newKey.toString());
+    getStateRepo().stateConfig = EditorStateConfig.EDIT_NOTE;
+    updateNoteList(false);
   }
 
   updateNoteList(bool? exitNow) {

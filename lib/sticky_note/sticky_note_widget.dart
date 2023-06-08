@@ -211,10 +211,15 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
       ));
       // noteWidgets.add(const Padding(padding: EdgeInsets.all(12)));
       noteWidgets.addAll(noteItemsWidget(note, state, cubit));
-    /*  noteWidgets.add(const Divider(
+
+
+      /*  noteWidgets.add(const Divider(
         thickness: 1,
       ));*/
       noteWidgets.add(noteTagsWidget(note, state, cubit));
+      if (cubit.getStateRepo().stateConfig == EditorStateConfig.EDIT_NOTE) {
+        noteWidgets.add(noteOpsOptions(note.id!));
+      }
 
       noteColumn = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,6 +739,34 @@ class _StickyNoteWidgetState extends State<StickyNoteWidget> {
     }
 
     return widget;
+  }
+
+  Widget noteOpsOptions(String key) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        IconButton(
+          onPressed: () {
+            _stickyNoteCubit.addNoteItem();
+          },
+          icon: const Icon(
+            Icons.add,
+            size: 20,
+            color: Colors.blue,
+          ),
+        ),
+        IconButton(
+          onPressed: () async {
+            await _stickyNoteCubit.startNoteDeletion(key);
+          },
+          icon: const Icon(
+            Icons.delete,
+            size: 18,
+            color: Colors.red,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget getTagsWidget(List<String> tags, Function(String)? onClick,
